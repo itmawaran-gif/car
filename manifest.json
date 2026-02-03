@@ -1,6 +1,6 @@
 {
   "name": "نظام إدارة أسطول السيارات",
-  "short_name": "سياراتي",
+  "short_name": "CARS",
   "description": "نظام تسجيل استلام وتسليم السيارات عبر QR Code",
   "start_url": "index.html",
   "display": "standalone",
