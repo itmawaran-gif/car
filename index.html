@@ -106,10 +106,20 @@
     }
 
     function sendData(carId) {
-        const type = isOnTrip ? "end" : "start";
-        const now = new Date().toLocaleString('ar-EG');
-        
-        document.getElementById('statusMsg').innerText = "جاري تسجيل البيانات...";
+    const type = isOnTrip ? "end" : "start";
+    
+    // التعديل هنا لضمان أرقام إنجليزية وتنسيق 24 ساعة
+    const now = new Date().toLocaleString('en-GB', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    }).replace(/\//g, '-'); // تبديل الفواصل لسهولة القراءة
+    
+    document.getElementById('statusMsg').innerText = "جاري تسجيل البيانات...";
 
         fetch(scriptURL, {
             method: 'POST',
@@ -146,4 +156,5 @@
     }
 </script>
 </body>
+
 </html>
