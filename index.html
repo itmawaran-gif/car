@@ -142,9 +142,18 @@
     }
 
     function clearUser() {
-        if(confirm("هل تريد مسح بيانات السائق الحالي؟")) {
-            localStorage.clear();
-            location.reload();
+        // طلب كلمة السر من المستخدم
+        let password = prompt("تکایە وشەی نهێنی بنووسە (أدخل كلمة السر):");
+
+        if (password === "Mm19941994Mm") {
+            // إذا كانت صحيحة، تأكيد الحذف
+            if(confirm("آیا دڵنیایت لە سڕینەوەی ناوی شۆفێر؟ (هل تريد مسح بيانات السائق؟)")) {
+                localStorage.clear();
+                location.reload();
+            }
+        } else if (password !== null) {
+            // إذا كانت خاطئة ولم يضغط إلغاء
+            alert("وشەی نهێنی هەڵەیە! (كلمة السر خاطئة)");
         }
     }
 
@@ -158,4 +167,5 @@
 </body>
 
 </html>
+
 
