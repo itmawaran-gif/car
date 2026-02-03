@@ -1,5 +1,5 @@
 {
-  "name": "نظام إدارة أسطول السيارات",
+  "name": "سیستەمی وەرگرتنی ئۆتۆمبێل",
   "short_name": "CARS",
   "description": "نظام تسجيل استلام وتسليم السيارات عبر QR Code",
   "start_url": "index.html",
