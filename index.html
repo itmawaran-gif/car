@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة السيارات</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #f0f2f5; padding: 20px; color: #333; }
+        .card { background: white; padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        h2 { color: #007bff; margin-bottom: 20px; }
+        button { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin: 15px 0; width: 100%; transition: 0.3s; }
+        button:active { transform: scale(0.98); }
+        input { padding: 15px; width: 90%; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; outline: none; }
+        input:focus { border-color: #007bff; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-top: 15px; background: #000; }
+        .status { color: #28a745; font-weight: bold; margin-top: 15px; min-height: 24px; }
+        .driver-info { background: #e7f3ff; padding: 10px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card" id="app">
+    <h2>نظام أسطول السيارات</h2>
+    
+    <div id="nameSection" style="display:none;">
+        <p>مرحباً بك، يرجى إدخال اسمك:</p>
+        <input type="text" id="driverNameInput" placeholder="اسم السائق الثلاثي">
+        <button onclick="saveName()">حفظ والبدء</button>
+    </div>
+
+    <div id="mainSection" style="display:none;">
+        <div class="driver-info" id="driverDisplayName"></div>
+        <div id="reader" style="display:none;"></div>
+        <button id="actionBtn" onclick="startScan()">بداية الرحلة (Scan QR)</button>
+        <p class="status" id="statusMsg"></p>
+        <button onclick="clearUser()" style="background:none; color:#888; font-size:14px; margin-top:20px;">تغيير السائق</button>
+    </div>
+</div>
+
+<script>
+    let driverName = localStorage.getItem('driverName');
+    let isOnTrip = localStorage.getItem('isOnTrip') === 'true';
+    // الرابط الخاص بك
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx89l4TEtUKO27rxIoeMqxa7Sv6phCPNzsZaCh-XEMxcaW2BKqGDF6Ig8o-spsvNP8m/exec'; 
+
+    window.onload = () => {
+        if (!driverName) {
+            document.getElementById('nameSection').style.display = 'block';
+        } else {
+            showMain();
+        }
+    };
+
+    function saveName() {
+        let name = document.getElementById('driverNameInput').value.trim();
+        if (name) {
+            localStorage.setItem('driverName', name);
+            driverName = name;
+            showMain();
+        } else {
+            alert("يرجى كتابة الاسم");
+        }
+    }
+
+    function showMain() {
+        document.getElementById('nameSection').style.display = 'none';
+        document.getElementById('mainSection').style.display = 'block';
+        document.getElementById('driverDisplayName').innerText = "السائق: " + driverName;
+        updateUI();
+    }
+
+    function updateUI() {
+        const btn = document.getElementById('actionBtn');
+        if (isOnTrip) {
+            btn.innerText = "تسليم السيارة (Scan QR)";
+            btn.style.background = "#dc3545";
+        } else {
+            btn.innerText = "بداية الرحلة (Scan QR)";
+            btn.style.background = "#007bff";
+        }
+    }
+
+    function startScan() {
+        document.getElementById('reader').style.display = 'block';
+        document.getElementById('statusMsg').innerText = "جاري فتح الكاميرا...";
+        
+        const html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        html5QrCode.start({ facingMode: "environment" }, config,
+            (decodedText) => {
+                sendData(decodedText);
+                html5QrCode.stop().then(() => {
+                    document.getElementById('reader').style.display = 'none';
+                });
+            }
+        ).catch(err => {
+            alert("خطأ في الكاميرا: تأكد من إعطاء الصلاحية");
+            document.getElementById('reader').style.display = 'none';
+        });
+    }
+
+    function sendData(carId) {
+        const type = isOnTrip ? "end" : "start";
+        const now = new Date().toLocaleString('ar-EG');
+        
+        document.getElementById('statusMsg').innerText = "جاري تسجيل البيانات...";
+
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                driverName: driverName,
+                carId: carId, // اسم السيارة المستخرج من الـ QR
+                time: now,
+                type: type
+            })
+        }).then(() => {
+            isOnTrip = !isOnTrip;
+            localStorage.setItem('isOnTrip', isOnTrip);
+            document.getElementById('statusMsg').innerText = "تمت العملية بنجاح ✅";
+            updateUI();
+        }).catch(err => {
+            alert("فشل الاتصال: " + err);
+            document.getElementById('statusMsg').innerText = "خطأ في الإرسال ❌";
+        });
+    }
+
+    function clearUser() {
+        if(confirm("هل تريد مسح بيانات السائق الحالي؟")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    // تسجيل الـ Service Worker (للـ PWA)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
+      });
+    }
+</script>
+</body>
+</html>
