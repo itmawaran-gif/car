@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة السيارات</title>
+    <title>سیستەمی وەرگرتنی ئۆتۆمبێل</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#007bff">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -25,18 +25,18 @@
 <body>
 
 <div class="card" id="app">
-    <h2>نظام أسطول السيارات</h2>
+    <h2>سیستەمی وەرگرتنی ئۆتۆمبێل</h2>
     
     <div id="nameSection" style="display:none;">
-        <p>مرحباً بك، يرجى إدخال اسمك:</p>
-        <input type="text" id="driverNameInput" placeholder="اسم السائق الثلاثي">
-        <button onclick="saveName()">حفظ والبدء</button>
+        <p>بەخێربێن، تکایە ناوی خۆت بنووسە:</p>
+        <input type="text" id="driverNameInput" placeholder="ناوی تەواوی شۆفێر">
+        <button onclick="saveName()">OK</button>
     </div>
 
     <div id="mainSection" style="display:none;">
         <div class="driver-info" id="driverDisplayName"></div>
         <div id="reader" style="display:none;"></div>
-        <button id="actionBtn" onclick="startScan()">بداية الرحلة (Scan QR)</button>
+        <button id="actionBtn" onclick="startScan()">وەرگرتنی ئۆتۆمبێل (Scan QR)</button>
         <p class="status" id="statusMsg"></p>
         <button onclick="clearUser()" style="background:none; color:#888; font-size:14px; margin-top:20px;">تغيير السائق</button>
     </div>
@@ -63,7 +63,7 @@
             driverName = name;
             showMain();
         } else {
-            alert("يرجى كتابة الاسم");
+            alert("تکایە ناوەکە بنووسن");
         }
     }
 
@@ -77,10 +77,10 @@
     function updateUI() {
         const btn = document.getElementById('actionBtn');
         if (isOnTrip) {
-            btn.innerText = "تسليم السيارة (Scan QR)";
+            btn.innerText = "گەڕاندنەوەی ئۆتۆمبێل (Scan QR)";
             btn.style.background = "#dc3545";
         } else {
-            btn.innerText = "بداية الرحلة (Scan QR)";
+            btn.innerText = "وەرگرتنی ئۆتۆمبێل (Scan QR)";
             btn.style.background = "#007bff";
         }
     }
@@ -133,11 +133,11 @@
         }).then(() => {
             isOnTrip = !isOnTrip;
             localStorage.setItem('isOnTrip', isOnTrip);
-            document.getElementById('statusMsg').innerText = "تمت العملية بنجاح ✅";
+            document.getElementById('statusMsg').innerText = "تەواو ✅";
             updateUI();
         }).catch(err => {
             alert("فشل الاتصال: " + err);
-            document.getElementById('statusMsg').innerText = "خطأ في الإرسال ❌";
+            document.getElementById('statusMsg').innerText = "هەڵەی گواستنەوە ❌";
         });
     }
 
@@ -158,3 +158,4 @@
 </body>
 
 </html>
+
