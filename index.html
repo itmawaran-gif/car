@@ -20,19 +20,59 @@
         #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-top: 15px; background: #000; }
         .status { color: #28a745; font-weight: bold; margin-top: 15px; min-height: 24px; }
         .driver-info { background: #e7f3ff; padding: 10px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
+        #traccarOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        #traccarOverlay.show { display: flex; }
+        #traccarPopup {
+            background: white;
+            border-radius: 20px;
+            padding: 35px 25px;
+            max-width: 340px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            text-align: center;
+            animation: popIn 0.3s ease;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+        #traccarPopup h3 { color: #007bff; font-size: 22px; margin-bottom: 10px; }
+        #traccarPopup p { color: #555; font-size: 15px; margin-bottom: 25px; line-height: 1.6; }
+        #openTraccarBtn {
+            background: linear-gradient(135deg, #007bff, #0056cc);
+            color: white; border: none; padding: 16px 30px;
+            border-radius: 12px; font-size: 18px; font-weight: bold;
+            cursor: pointer; width: 100%; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+        }
+        #openTraccarBtn:active { transform: scale(0.97); }
     </style>
 </head>
 <body>
 
+<div id="traccarOverlay" class="show">
+    <div id="traccarPopup">
+        <h3>بەیانی باش</h3>
+        <p><br><strong>ئامادەی بۆ ڕۆژێکی نوێ؟</strong><br></p>
+        <button id="openTraccarBtn" onclick="openTraccar()">OK</button>
+    </div>
+</div>
+
 <div class="card" id="app">
     <h2>سیستەمی وەرگرتنی ئۆتۆمبێل</h2>
-    
     <div id="nameSection" style="display:none;">
         <p>بەخێربێن، تکایە ناوی خۆت بنووسە:</p>
         <input type="text" id="driverNameInput" placeholder="ناوی تەواوی شۆفێر">
         <button onclick="saveName()">OK</button>
     </div>
-
     <div id="mainSection" style="display:none;">
         <div class="driver-info" id="driverDisplayName"></div>
         <div id="reader" style="display:none;"></div>
@@ -45,10 +85,31 @@
 <script>
     let driverName = localStorage.getItem('driverName');
     let isOnTrip = localStorage.getItem('isOnTrip') === 'true';
-    // الرابط الخاص بك
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx89l4TEtUKO27rxIoeMqxa7Sv6phCPNzsZaCh-XEMxcaW2BKqGDF6Ig8o-spsvNP8m/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx89l4TEtUKO27rxIoeMqxa7Sv6phCPNzsZaCh-XEMxcaW2BKqGDF6Ig8o-spsvNP8m/exec';
+
+    function checkTraccarPopup() {
+        const today = new Date().toDateString();
+        const lastShown = localStorage.getItem('traccarLastShown');
+        if (lastShown === today) {
+            document.getElementById('traccarOverlay').classList.remove('show');
+        }
+    }
+
+    function openTraccar() {
+        const today = new Date().toDateString();
+        localStorage.setItem('traccarLastShown', today);
+        document.getElementById('traccarOverlay').classList.remove('show');
+
+        // Use hidden iframe so the browser stays on this page
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = 'org.traccar.client://';
+        document.body.appendChild(iframe);
+        setTimeout(() => document.body.removeChild(iframe), 2000);
+    }
 
     window.onload = () => {
+        checkTraccarPopup();
         if (!driverName) {
             document.getElementById('nameSection').style.display = 'block';
         } else {
@@ -88,10 +149,8 @@
     function startScan() {
         document.getElementById('reader').style.display = 'block';
         document.getElementById('statusMsg').innerText = "جاري فتح الكاميرا...";
-        
         const html5QrCode = new Html5Qrcode("reader");
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
         html5QrCode.start({ facingMode: "environment" }, config,
             (decodedText) => {
                 sendData(decodedText);
@@ -106,30 +165,17 @@
     }
 
     function sendData(carId) {
-    const type = isOnTrip ? "end" : "start";
-    
-    // التعديل هنا لضمان أرقام إنجليزية وتنسيق 24 ساعة
-    const now = new Date().toLocaleString('en-GB', {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    }).replace(/\//g, '-'); // تبديل الفواصل لسهولة القراءة
-    
-    document.getElementById('statusMsg').innerText = "داتاکان تۆمار دەکرێن...";
-
+        const type = isOnTrip ? "end" : "start";
+        const now = new Date().toLocaleString('en-GB', {
+            year: 'numeric', month: 'numeric', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+        }).replace(/\//g, '-');
+        document.getElementById('statusMsg').innerText = "داتاکان تۆمار دەکرێن...";
         fetch(scriptURL, {
             method: 'POST',
             mode: 'no-cors',
-            body: JSON.stringify({
-                driverName: driverName,
-                carId: carId, // اسم السيارة المستخرج من الـ QR
-                time: now,
-                type: type
-            })
+            body: JSON.stringify({ driverName, carId, time: now, type })
         }).then(() => {
             isOnTrip = !isOnTrip;
             localStorage.setItem('isOnTrip', isOnTrip);
@@ -142,31 +188,22 @@
     }
 
     function clearUser() {
-        // طلب كلمة السر من المستخدم
         let password = prompt("تکایە وشەی نهێنی بنووسە (أدخل كلمة السر):");
-
         if (password === "Mm19941994Mm") {
-            // إذا كانت صحيحة، تأكيد الحذف
             if(confirm("آیا دڵنیایت لە سڕینەوەی ناوی شۆفێر؟ (هل تريد مسح بيانات السائق؟)")) {
                 localStorage.clear();
                 location.reload();
             }
         } else if (password !== null) {
-            // إذا كانت خاطئة ولم يضغط إلغاء
             alert("وشەی نهێنی هەڵەیە! (كلمة السر خاطئة)");
         }
     }
 
-    // تسجيل الـ Service Worker (للـ PWA)
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
-      });
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
+        });
     }
 </script>
 </body>
-
 </html>
-
-
-
